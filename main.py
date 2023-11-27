@@ -19,7 +19,7 @@ def BarCodeDetector():
         for obj in decoded_objects:
             print(f"Type: {obj.type}, Data: {obj.data.decode('utf-8')}")
             if obj.data.decode('utf-8') in Item_list:
-                continue
+                send_data_to_arduino("3")
             else:
                 print(f"Type: {obj.type}, Data: {obj.data.decode('utf-8')}")
                 Item_list.append(obj.data.decode('utf-8'))
@@ -42,5 +42,6 @@ def main():
 def send_data_to_arduino(data):
     SerialComm.write(data.encode())
 
+def read_data_from_arduino():
+    print(SerialComm.readline().decode('ascii'))
 main()
-
