@@ -1,10 +1,14 @@
 char data;
+const int BUZZER = 2;
+const int LED_GREEN = 4;
+const int LED_RED = 5;
+
 
 void setup() {
   Serial.begin(9600);
-  pinMode(2,OUTPUT); // BUZZER
-  pinMode(4,OUTPUT); // LED GREEN (SUCCESS)
-  pinMode(5,OUTPUT); // LED RED (FAILURE)
+  pinMode(BUZZER,OUTPUT); // BUZZER
+  pinMode(LED_GREEN,OUTPUT); // LED GREEN (SUCCESS)
+  pinMode(LED_RED,OUTPUT); // LED RED (FAILURE)
 
 }
 
@@ -12,19 +16,19 @@ void loop() {
   if (Serial.available() > 0){
     data = Serial.read();
     if (data == '1'){
-      digitalWrite(2,HIGH);
+      digitalWrite(BUZZER,HIGH);
       delay(100);
-      digitalWrite(2,LOW);
+      digitalWrite(BUZZER,LOW);
     }
     else if (data == '2'){
-      digitalWrite(4,HIGH);
-      delay(100);
-      digitalWrite(4,LOW);
+      digitalWrite(LED_GREEN,HIGH);
+      delay(400);
+      digitalWrite(LED_GREEN,LOW);
     }
     else if (data == '3'){
-      digitalWrite(5,HIGH);
+      digitalWrite(LED_RED,HIGH);
       delay(100);
-      digitalWrite(5,LOW);
+      digitalWrite(LED_RED,LOW);
     }
   }
 else{
