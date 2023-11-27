@@ -2,8 +2,9 @@ char data;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(2,OUTPUT);
-  pinMode(4,OUTPUT);
+  pinMode(2,OUTPUT); // BUZZER
+  pinMode(4,OUTPUT); // LED GREEN (SUCCESS)
+  pinMode(5,OUTPUT); // LED RED (FAILURE)
 
 }
 
@@ -19,8 +20,13 @@ void loop() {
     }
     else if (data == '2'){
       digitalWrite(4,HIGH);
-      delay(300);
+      delay(100);
       digitalWrite(4,LOW);
+    }
+    else if (data == '3'){
+      digitalWrite(5,HIGH);
+      delay(100);
+      digitalWrite(5,LOW);
     }
   }
 else{
