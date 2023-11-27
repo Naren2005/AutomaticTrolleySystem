@@ -17,7 +17,6 @@ def BarCodeDetector():
         ret, frame = cap.read()
         decoded_objects = decode(frame)  # list of decoded obj, deletes after detected instantly
         for obj in decoded_objects:
-            print(f"Type: {obj.type}, Data: {obj.data.decode('utf-8')}")
             if obj.data.decode('utf-8') in Item_list:
                 send_data_to_arduino("3")
             else:

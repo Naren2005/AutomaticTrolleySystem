@@ -13,10 +13,8 @@ void loop() {
     data = Serial.read();
     if (data == '1'){
       digitalWrite(2,HIGH);
-      Serial.write("Transmitting HIGH");
       delay(100);
       digitalWrite(2,LOW);
-      Serial.write("Trasmitting LOW");
     }
     else if (data == '2'){
       digitalWrite(4,HIGH);
