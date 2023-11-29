@@ -1,7 +1,7 @@
 import cv2
 from pyzbar.pyzbar import decode
 import serial
-import time
+from collections import Counter
 
 SerialComm = serial.Serial('COM6', baudrate=9600, timeout=0.5)
 
@@ -9,22 +9,29 @@ def BarCodeDetector():
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,280)
-    cap.set(cv2.CAP_PROP_FPS, 120)
+    cap.set(cv2.CAP_PROP_FPS,120)
 
     Item_list = []
+    Temp_list = []
 
     while True:
-        ret, frame = cap.read()
-        decoded_objects = decode(frame)  # list of decoded obj, deletes after detected instantly
-        for obj in decoded_objects:
-            if obj.data.decode('utf-8') in Item_list:
-                send_data_to_arduino("3")
-            else:
-                print(f"Type: {obj.type}, Data: {obj.data.decode('utf-8')}")
-                Item_list.append(obj.data.decode('utf-8'))
-                send_data_to_arduino("1")
-                send_data_to_arduino("2")
+        ret, frame = cap.read() # frame is a numpy array
+        decoded_objects = decode(frame)  # List of decoded obj, deletes after detected instantly
 
+        for obj in decoded_objects:
+            objectData = obj.data.decode('utf-8')
+            Temp_list.append(objectData)
+            if objectData not in Item_list:
+                if check_frequency(objectData,Temp_list) == True:
+                    send_data_to_arduino("2")
+                    send_data_to_arduino("1")
+                    Item_list.append(objectData)
+                    Temp_list.clear()
+            else:
+                if check_frequency(objectData,Temp_list) == True:
+                    send_data_to_arduino("3")
+                    Item_list.remove(objectData)
+                    Temp_list.clear()
         cv2.imshow("Bar Code Scanner", frame)
         if cv2.waitKey(1) & 0xFF == 27:
             break
@@ -43,4 +50,13 @@ def send_data_to_arduino(data):
 
 def read_data_from_arduino():
     print(SerialComm.readline().decode('ascii'))
+
+def check_frequency(item_to_check, input_list):
+    # Use Counter to count the frequency of each item in the list
+    frequency_counter = Counter(input_list)
+
+    # Check if the frequency of the specified item is above 20
+    if frequency_counter[item_to_check] > 50:
+        return True
+
 main()
