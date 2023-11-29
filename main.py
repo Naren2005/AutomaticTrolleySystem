@@ -2,8 +2,11 @@ import cv2
 from pyzbar.pyzbar import decode
 import serial
 from collections import Counter
+import pandas as pd
 
 SerialComm = serial.Serial('COM6', baudrate=9600, timeout=0.5)
+total_price = []
+Item_list = []
 
 def BarCodeDetector():
     cap = cv2.VideoCapture(0)
@@ -11,7 +14,7 @@ def BarCodeDetector():
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,280)
     cap.set(cv2.CAP_PROP_FPS,120)
 
-    Item_list = []
+
     Temp_list = []
 
     while True:
@@ -32,6 +35,8 @@ def BarCodeDetector():
                     send_data_to_arduino("3")
                     Item_list.remove(objectData)
                     Temp_list.clear()
+
+
         cv2.imshow("Bar Code Scanner", frame)
         if cv2.waitKey(1) & 0xFF == 27:
             break
@@ -41,8 +46,10 @@ def BarCodeDetector():
     cap.release()
     cv2.destroyAllWindows()
 
+
 def main():
     BarCodeDetector()
+
 
 
 def send_data_to_arduino(data):
@@ -59,4 +66,12 @@ def check_frequency(item_to_check, input_list):
     if frequency_counter[item_to_check] > 50:
         return True
 
+def serial_checker(serialcode):
+    df = pd.read_excel('Lists.xlsx')
+    for value in df['S.No']:
+        if value == serialcode:
+            print('Yes')
+
 main()
+for i in Item_list:
+    serial_checker(i)
