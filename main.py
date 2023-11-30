@@ -3,12 +3,19 @@ from pyzbar.pyzbar import decode
 import serial
 from collections import Counter
 import pandas as pd
+import warnings
+from Database import send_sms
+
+warnings.filterwarnings('ignore')
+
+
 
 SerialComm = serial.Serial('COM6', baudrate=9600, timeout=0.5)
-total_price = []
+total_price = 0
 Item_list = []
 
 def BarCodeDetector():
+    global total_price
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,280)
@@ -29,13 +36,13 @@ def BarCodeDetector():
                     send_data_to_arduino("2")
                     send_data_to_arduino("1")
                     Item_list.append(objectData)
+                    serial_checker(objectData)
                     Temp_list.clear()
             else:
                 if check_frequency(objectData,Temp_list) == True:
                     send_data_to_arduino("3")
                     Item_list.remove(objectData)
                     Temp_list.clear()
-
 
         cv2.imshow("Bar Code Scanner", frame)
         if cv2.waitKey(1) & 0xFF == 27:
@@ -67,10 +74,28 @@ def check_frequency(item_to_check, input_list):
         return True
 
 def serial_checker(serialcode):
-    df = pd.read_excel('Lists.xlsx')
-    for value in df['S.No']:
-        if value == serialcode:
-            print('Yes')
+    # Replace 'your_excel_file.xlsx' with the actual path to your Excel file
+    excel_file_path = 'Lists.xlsx'
+    # Read the data from the Excel sheet into a DataFrame
+    df = pd.read_excel(excel_file_path)
+
+    # Your 6-digit number
+    barcode = serialcode
+
+    # Check if the number exists in the 'Number' column
+    if barcode in df['S.No'].values:
+        # Retrieve the corresponding Name and Date
+        row = df[df['S.No'] == barcode]
+        price = row['MRP'].values[0]
+        item_name = row['product'].values[0]  # Replace 'Date' with the actual column name
+
+        global total_price
+        total_price += price
+
+        print(f"{item_name} : {price} Rs         Total: {total_price}")
+        print("")
+    else:
+        print(f"This code: {barcode} does not exist in our Datasheet.")
 
 main()
 for i in Item_list:
