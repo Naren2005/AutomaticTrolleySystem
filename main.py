@@ -1,14 +1,16 @@
 import cv2
 from pyzbar.pyzbar import decode
+from pyzbar.pyzbar import ZBarSymbol
 import serial
 from collections import Counter
 import pandas as pd
 import warnings
 from Database import send_sms
+import colorama
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore",category=UserWarning)
 
-
+mydict = {}
 
 SerialComm = serial.Serial('COM6', baudrate=9600, timeout=0.5)
 total_price = 0
@@ -26,7 +28,7 @@ def BarCodeDetector():
 
     while True:
         ret, frame = cap.read() # frame is a numpy array
-        decoded_objects = decode(frame)  # List of decoded obj, deletes after detected instantly
+        decoded_objects = decode(frame,symbols=[ZBarSymbol.QRCODE])  # List of decoded obj, deletes after detected instantly
 
         for obj in decoded_objects:
             objectData = obj.data.decode('utf-8')
@@ -36,12 +38,13 @@ def BarCodeDetector():
                     send_data_to_arduino("2")
                     send_data_to_arduino("1")
                     Item_list.append(objectData)
-                    serial_checker(objectData)
+                    serial_checker(objectData,True)
                     Temp_list.clear()
             else:
                 if check_frequency(objectData,Temp_list) == True:
                     send_data_to_arduino("3")
                     Item_list.remove(objectData)
+                    serial_checker(objectData,False)
                     Temp_list.clear()
 
         cv2.imshow("Bar Code Scanner", frame)
@@ -73,7 +76,7 @@ def check_frequency(item_to_check, input_list):
     if frequency_counter[item_to_check] > 50:
         return True
 
-def serial_checker(serialcode):
+def serial_checker(serialcode,condition):
     # Replace 'your_excel_file.xlsx' with the actual path to your Excel file
     excel_file_path = 'Lists.xlsx'
     # Read the data from the Excel sheet into a DataFrame
@@ -89,14 +92,29 @@ def serial_checker(serialcode):
         price = row['MRP'].values[0]
         item_name = row['product'].values[0]  # Replace 'Date' with the actual column name
 
-        global total_price
-        total_price += price
 
-        print(f"{item_name} : {price} Rs         Total: {total_price}")
-        print("")
+        global mydict
+        global total_price
+
+        if condition == True:
+            mydict[item_name] = price
+            total_price += price
+            k = f"+Added {item_name} : {price} Rs         Total: {total_price}"
+            print(colorama.Fore.GREEN + k)
+            print("")
+            send_data_to_arduino(k)
+        elif condition == False:
+            mydict.pop(item_name)
+            total_price -= price
+            t = f"-Removed {item_name} : {price} Rs         Total: {total_price}"
+            send_data_to_arduino(t)
+            print(colorama.Fore.RED + t)
+            print("")
+
     else:
         print(f"This code: {barcode} does not exist in our Datasheet.")
 
 main()
-for i in Item_list:
-    serial_checker(i)
+print(colorama.Fore.BLACK + "------Bill------" +  '\n')
+for key , values in mydict.items():
+    print(f"{colorama.Fore.RESET} {key} : Rs {values}")
