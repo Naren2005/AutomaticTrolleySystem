@@ -6,7 +6,7 @@ client = Client(account_sid,auth_token)
 
 def send_sms(smz):
     client.messages.create(
-            to="+919490932710",
+            to="",
             from_="+14439633415",
             body=smz
         )
